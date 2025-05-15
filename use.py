@@ -3,7 +3,7 @@ import os
 import numpy as np
 import torch
 from DQN import DQN_agent
-from r_env import NetworkSwitchEnv
+from r_env4 import NetworkSwitchEnv
 from utils import evaluate_policy, str2bool
 from ParameterGenerator import ExternalParameterGenerator
 
@@ -71,27 +71,27 @@ def inference():
     agent = DQN_agent(**vars(opt))
 
     # 加载训练好的模型
-    model_path = f'models/DuelDDQN_N_step800_round5_1743054091.pth'
+    model_path = f'models/DuelDDQN_N_step1000_round8_1747291999.pth'
     agent.load(model_path)
 
     N = 200
     total_steps = 0
     env_seed = opt.seed
 
-    s, info = env.reset(seed=env_seed)
+    s = env.reset(seed=env_seed)
     done = False
     inner_loop_count = 0
     total_reward = 0
     #print(f"state：{env.state}")
     while not done:
         # 生成实时的外部参数
-        external_params = param_generator.external_params_generator()
+        external_params = param_generator.get_t_moment_params(inner_loop_count + 1)
         #print(f"Generated external params: {external_params}")
         # 使用模型选择动作
         a = agent.select_action(s, deterministic=True)
         print(f"a: {a}")
         # 与环境交互
-        s_next, r, dw, tr, info = env.step(a, external_params)
+        s_next, r, dw, tr= env.step(a, external_params)
         done = (dw or tr)
         #print(f"s_next: {s_next}")
         #print(f"info: {info}")

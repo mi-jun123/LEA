@@ -263,60 +263,86 @@ class NetworkSwitchEnv(gym.Env):
             }
         return normalized_boundaries
 
-    def normalize_state(self, state, param_mapping=None):
-        """根据效用边界对状态进行归一化"""
+    def normalize_state(self, state_dict, param_mapping=None):
+        """根据效用边界对状态进行归一化，返回数组格式"""
         util_boundaries = self._init_util_boundaries()
 
-        # 生成从0到8的所有网络编号的参数映射
+        # 定义固定的参数顺序（数组索引映射）
+        PARAM_ORDER = [
+            # 自组网（编号0）
+            "rss_adhoc_0", "rtt_adhoc_0", "c_adhoc_0",
+            "bitrate_adhoc_0", "v_adhoc_0", "h_adhoc_0",
+
+            # 5G基站（编号1-8）
+            *[f"rss_5g_{i}" for i in range(1, 9)],
+            *[f"rtt_5g_{i}" for i in range(1, 9)],
+            *[f"c_5g_{i}" for i in range(1, 9)],
+            *[f"bitrate_5g_{i}" for i in range(1, 9)],
+            *[f"v_5g_{i}" for i in range(1, 9)],
+            *[f"h_5g_{i}" for i in range(1, 9)],
+        ]
+
+        # 生成参数到效用类型的映射
         param_to_util = {}
 
-        # 自组网（编号0）
-        param_to_util.update({
-            "snr_adhoc_0": "U_Rs",
-            "rss_adhoc_0": "U_Rs",
-            "rtt_adhoc_0": "Ud",
-            "c_adhoc_0": "Uc",
-            "bandwidth_adhoc_0": "Ub",
-            "v_adhoc_0": "Us",
-            "h_adhoc_0": "Uh",
-        })
+        # 自组网映射
+        for param in PARAM_ORDER[:6]:
+            if param.startswith("rss"):
+                param_to_util[param] = "U_Rs"
+            elif param.startswith("rtt"):
+                param_to_util[param] = "Ud"
+            elif param.startswith("c"):
+                param_to_util[param] = "Uc"
+            elif param.startswith("bitrate"):
+                param_to_util[param] = "Ub"
+            elif param.startswith("v"):
+                param_to_util[param] = "Us"
+            elif param.startswith("h"):
+                param_to_util[param] = "Uh"
 
-        # 5G基站（编号1-8）
+        # 5G基站映射
         for i in range(1, 9):
             prefix = f"5g_{i}"
             param_to_util.update({
-                f"snr_{prefix}": "U_Rs",
                 f"rss_{prefix}": "U_Rs",
                 f"rtt_{prefix}": "Ud",
                 f"c_{prefix}": "Uc",
-                f"bandwidth_{prefix}": "Ub",
+                f"bitrate_{prefix}": "Ub",
                 f"v_{prefix}": "Us",
                 f"h_{prefix}": "Uh",
             })
 
-        # 合并自定义映射（如果有）
+        # 合并自定义映射
         if param_mapping:
             param_to_util.update(param_mapping)
 
-        # 归一化逻辑
-        normalized_state = {}
-        for param, value in state.items():
-            if param in param_to_util:
-                util_type = param_to_util[param]
-                min_val = util_boundaries[util_type]["min"]
-                max_val = util_boundaries[util_type]["max"]
+        # 创建归一化后的数组
+        normalized_array = np.zeros(len(PARAM_ORDER), dtype=np.float32)
 
-                # 避免除零错误
-                if abs(max_val - min_val) < 1e-9:
-                    normalized_state[param] = 0.0
+        # 填充数组
+        for i, param in enumerate(PARAM_ORDER):
+            if param in state_dict:
+                value = state_dict[param]
+                if param in param_to_util:
+                    util_type = param_to_util[param]
+                    min_val = util_boundaries[util_type]["min"]
+                    max_val = util_boundaries[util_type]["max"]
+
+                    # 避免除零错误
+                    if abs(max_val - min_val) < 1e-9:
+                        normalized_array[i] = 0.0
+                    else:
+                        normalized_array[i] = (value - min_val) / (max_val - min_val)
                 else:
-                    normalized_state[param] = (value - min_val) / (max_val - min_val)
+                    # 未映射的参数保持原值（可能需要标准化）
+                    print(f"警告: 参数 '{param}' 没有对应的效用类型，使用原值")
+                    normalized_array[i] = value
             else:
-                # 未映射的参数保持原值
-                print(f"警告: 参数 '{param}' 没有对应的效用类型，未进行归一化")
-                normalized_state[param] = value
+                # 缺少的参数使用默认值（0或其他合理值）
+                print(f"警告: 状态字典缺少参数 '{param}'，使用默认值0")
+                normalized_array[i] = 0
 
-        return normalized_state
+        return normalized_array
     def calculate_G(self, omega_b, omega_d, omega_Rs, omega_c, omega_s, omega_h, Ub, Ud, U_Rs, Uc, Us, Uh):
         """
         计算 G(x, a_t) 函数
@@ -379,7 +405,7 @@ class NetworkSwitchEnv(gym.Env):
             prefix = f"5g_{action}"
         rss = d_state.get(f"rss_{prefix}", 0)
         rtt = d_state.get(f"rtt_{prefix}", 0)
-        print(f"rtt{rtt}")
+        #print(f"rtt{rtt}")
         bitrate = d_state.get(f"bitrate_{prefix}", 0)
         v = d_state.get(f"v_{prefix}", 0)
         h = d_state.get(f"h_{prefix}", 0)
@@ -429,7 +455,6 @@ class NetworkSwitchEnv(gym.Env):
                 self.state[f"c_{prefix}"] = 0.9
 
             # 更新状态空间
-            self.state[f"snr_{prefix}"] = snr_i
             self.state[f"rss_{prefix}"] = rss_i
             self.state[f"rtt_{prefix}"] = rtt_i
 
@@ -469,7 +494,7 @@ class NetworkSwitchEnv(gym.Env):
         else:
             c=c1
 
-        observation=self.normalize_state(State1)
+        observation=self.normalize_state(self.state)
         self.prev_network=action
 
 
@@ -497,7 +522,8 @@ class NetworkSwitchEnv(gym.Env):
         self.prev_network=generator.get_nearest_eNB(0)
         # 获取初始状态并赋值给self.state
         self.update_external_states(generator.get_t_moment_params(0))
-        return self.state
+        observation=self.normalize_state(self.state)
+        return observation
 
     def close(self):
         """

@@ -6,15 +6,16 @@ def evaluate_policy(env, agent, param_generator,max_steps_per_episode, turns = 1
         step_count = 0
 
         try:
-            s, info = env.reset(seed=seed)
+            s= env.reset(seed=seed)
             done = False
             while not done and step_count <=max_steps_per_episode:
                 # Take deterministic actions at test time
+                external_params = param_generator.get_t_moment_params(step_count + 1)
                 step_count += 1
                 #print(f"第 {j + 1} 个回合，第 {step_count} 步")
                 a = agent.select_action(s, deterministic=True)
 
-                s_next, r, dw, tr, info = env.step(a, external_params)  # 传入外部参数
+                s_next, r, dw, tr = env.step(a, external_params)  # 传入外部参数
                 done = (dw or tr)
 
                 total_scores += r

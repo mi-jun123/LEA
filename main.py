@@ -102,7 +102,7 @@ def main():
     N=200
     with tqdm(total=opt.Max_train_steps, desc="Training Progress", unit="step") as pbar:
         total_steps = 0
-        env_seed = opt.seed  # 假设 opt.seed 是初始的环境种子
+
 
         def should_terminate_inner_loop(inner_loop_count, N):
             return inner_loop_count >= N
