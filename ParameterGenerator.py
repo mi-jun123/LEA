@@ -113,8 +113,9 @@ class ExternalParameterGenerator:
     def calculate_pathloss(self,a, h_lap, ground_distance, h):
         """计算平均路径损耗（结合LoS/NLoS概率）"""
         d = math.sqrt((h_lap - h) ** 2 + ground_distance ** 2)  # 斜距
-        print(f"d{d}")
-        print(f"ground_distance{ground_distance}")
+        #print(f"d{d}")
+        #print(f"ground_distance{ground_distance}")
+
         if a==0:
             freq=self.freq0
         else:
@@ -166,11 +167,11 @@ class ExternalParameterGenerator:
         for i in range(self.num_of_eNBs):
             # 为每个基站使用不同的子种子，确保结果可复现
             np.random.seed(self.seed)
-            print(f"i:{i}")
-            print(f"t:{t}")
+            #print(f"i:{i}")
+            #print(f"t:{t}")
             rss = self.get_received_power(i,27, h_lap, self.distance[i][t], 0)
             RSS_list.append(rss)
-            print(f"rss{RSS_list}")
+            #print(f"rss{RSS_list}")
             self.ideal_RSS[i,t]=rss
         return RSS_list  # 返回所有基站的RSS列表输出一维数组
 

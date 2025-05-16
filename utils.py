@@ -1,4 +1,4 @@
-def evaluate_policy(env, agent, param_generator,max_steps_per_episode, turns = 1, seed=None ):
+def evaluate_policy(env,h, agent, param_generator,max_steps_per_episode, turns =1, seed=None ):
     total_scores = 0
 
     for j in range(turns):
@@ -10,7 +10,7 @@ def evaluate_policy(env, agent, param_generator,max_steps_per_episode, turns = 1
             done = False
             while not done and step_count <=max_steps_per_episode:
                 # Take deterministic actions at test time
-                external_params = param_generator.get_t_moment_params(step_count + 1)
+                external_params = param_generator.get_t_moment_params(step_count + 1,h)
                 step_count += 1
                 #print(f"第 {j + 1} 个回合，第 {step_count} 步")
                 a = agent.select_action(s, deterministic=True)
@@ -22,7 +22,7 @@ def evaluate_policy(env, agent, param_generator,max_steps_per_episode, turns = 1
                 s = s_next
         except Exception as e:
             print(f"评估第 {j + 1} 回合时出现异常: {e}")
-    return total_scores /step_count
+    return total_scores
 
 
 #You can just ignore this funciton. Is not related to the RL.

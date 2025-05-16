@@ -28,7 +28,7 @@ parser.add_argument('--eval_interval', type=int, default=int(2e3), help='Model e
 parser.add_argument('--random_steps', type=int, default=int(3e3), help='steps for random policy to explore')
 parser.add_argument('--update_every', type=int, default=50, help='training frequency')
 
-parser.add_argument('--gamma', type=float, default=0.99, help='Discounted Factor')
+parser.add_argument('--gamma', type=float, default=0.95, help='Discounted Factor')
 parser.add_argument('--net_width', type=int, default=200, help='Hidden net width')
 parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
 parser.add_argument('--batch_size', type=int, default=256, help='lenth of sliced trajectory')
@@ -99,7 +99,7 @@ def main():
     if opt.Loadmodel:
         agent.load(algo_name, BriefEnvName[opt.EnvIdex], opt.ModelIdex)
     losses=0
-    N=200
+    N=1000
     H=30#高度为30m
     param_generator.calculate_all_rand_walk()
     with tqdm(total=opt.Max_train_steps, desc="Training Progress", unit="step") as pbar:
@@ -144,7 +144,7 @@ def main():
                     agent.exp_noise *= opt.noise_decay
 
                 if should_evaluate(total_steps, opt):
-                    score = evaluate_policy(eval_env, agent, param_generator, turns=3, max_steps_per_episode=N,
+                    score = evaluate_policy(eval_env, H,agent, param_generator, turns=1, max_steps_per_episode=N,
                                             seed=env_seed)
                     if opt.write:
                         writer.add_scalar('ep_r', score, global_step=total_steps)
@@ -163,7 +163,7 @@ def main():
                 pbar.update(1)  # 更新进度条
 
                 if total_steps % opt.save_interval == 0:
-                    agent.save(algo_name, BriefEnvName[opt.EnvIdex], int(total_steps / 1000),8)
+                    agent.save(algo_name, BriefEnvName[opt.EnvIdex], int(total_steps / 1000),2)
 
                 inner_loop_count += 1  # 增加内层循环计数器
                 if should_terminate_inner_loop(inner_loop_count, N):
