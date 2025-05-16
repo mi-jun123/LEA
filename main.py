@@ -100,6 +100,8 @@ def main():
         agent.load(algo_name, BriefEnvName[opt.EnvIdex], opt.ModelIdex)
     losses=0
     N=200
+    H=30#高度为30m
+    param_generator.calculate_all_rand_walk()
     with tqdm(total=opt.Max_train_steps, desc="Training Progress", unit="step") as pbar:
         total_steps = 0
 
@@ -118,7 +120,7 @@ def main():
 
             while not done:
                 # 生成实时的外部参数
-                external_params = param_generator.get_t_moment_params(inner_loop_count+1)
+                external_params = param_generator.get_t_moment_params(inner_loop_count+1,H)
                 # 检查外部参数是否正确生成
                # #print(f"Generated external params: {external_params}")
 

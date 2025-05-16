@@ -29,6 +29,8 @@ class ExternalParameterGenerator:
 
         # 系统参数
         self.freq = freq  # 频率 (Hz)
+        self.freq0=16e8
+        self.freq1=35e8
         self.PL_max = max_pathloss  # 最大允许路径损耗 (dB)
 
         # Sigmoid曲线拟合参数（根据表I/表II预计算）
@@ -37,7 +39,7 @@ class ExternalParameterGenerator:
         # 传播组额外损耗（根据论文典型值）
         self.eta_LoS = 0.1  # LoS额外损耗 (dB)
         self.eta_NLoS = 21.0  # NLoS额外损耗 (dB)
-        self.A = self.eta_LoS - self.eta_NLoS
+
 
         self.distance = np.zeros([self.num_of_eNBs, self.num_of_points_measured])
         self.ideal_RSS = np.zeros([self.num_of_eNBs, self.num_of_points_measured])
@@ -57,7 +59,6 @@ class ExternalParameterGenerator:
             if t % 30 == 29:  # 每 30 步改变方向
                 direction *= -1
                 y -= unit  # 换行
-                x = 0
             else:
                 x += direction * unit  # 水平移动
 
@@ -67,6 +68,7 @@ class ExternalParameterGenerator:
                 self.distance[x][i] = math.sqrt(
                     pow(self.MS_coordinate[i][0] - self.eNB_coordinate[x][0], 2) +
                     pow(self.MS_coordinate[i][1] - self.eNB_coordinate[x][1], 2))
+
     def get_nearest_eNB(self, current_point):
         """获取距离当前测量点最近的基站编号和距离"""
         distances = self.distance[:, current_point]
@@ -108,25 +110,34 @@ class ExternalParameterGenerator:
         theta = math.radians(elevation_angle_deg)
         return 1 / (1 + math.exp(-self.b * (theta - math.radians(self.a))))
 
-    def calculate_pathloss(self, h_lap, ground_distance, h):
+    def calculate_pathloss(self,a, h_lap, ground_distance, h):
         """计算平均路径损耗（结合LoS/NLoS概率）"""
         d = math.sqrt((h_lap - h) ** 2 + ground_distance ** 2)  # 斜距
+        print(f"d{d}")
+        print(f"ground_distance{ground_distance}")
+        if a==0:
+            freq=self.freq0
+        else:
+            freq=self.freq1
+        #print(f"freq{freq}")
         theta = math.atan2(h_lap - h, ground_distance)  # 仰角（弧度）
-        pl_LoS = 20 * math.log10(d) + 20 * math.log10(self.freq) + 20 * math.log10(4 * math.pi / 3e8) + self.eta_LoS
-        pl_NLoS = 20 * math.log10(d) + 20 * math.log10(self.freq) + 20 * math.log10(4 * math.pi / 3e8) + self.eta_NLoS
-
+        pl_LoS = 20 * math.log10(d) + 20 * math.log10(freq) + 20 * math.log10(4 * math.pi / 3e8) + self.eta_LoS
+        pl_NLoS = 20 * math.log10(d) + 20 * math.log10(freq) + 20 * math.log10(4 * math.pi / 3e8) + self.eta_NLoS
+        #print(f"pl_LoS{pl_LoS}")
+        #print(f"pl_NLoS{pl_NLoS}")
         p_los = self.calculate_los_probability(math.degrees(theta))
         average_pl = p_los * pl_LoS + (1 - p_los) * pl_NLoS
 
         return average_pl
 
-    def get_received_power(self, tx_power, h_lap, ground_distance, h):
+    def get_received_power(self, a,tx_power, h_lap, ground_distance, h):
         """计算接收信号功率（考虑阴影衰落和多径效应）"""
         # 设置随机数生成器的状态，确保每次运行生成相同的随机数序列
         rng_state = np.random.get_state()
         np.random.seed(self.seed)
 
-        pl = self.calculate_pathloss(h_lap, ground_distance, h)
+        pl = self.calculate_pathloss(a,h_lap, ground_distance, h)
+
         shadow_fading = np.random.normal(0, 8)  # 阴影衰落（标准差8dB，论文典型值）
         multipath_fading = np.random.rayleigh()  # 多径衰落（瑞利分布）
 
@@ -155,9 +166,12 @@ class ExternalParameterGenerator:
         for i in range(self.num_of_eNBs):
             # 为每个基站使用不同的子种子，确保结果可复现
             np.random.seed(self.seed)
-            rss = self.get_received_power(27, h_lap, self.distance[i][t], 0)
+            print(f"i:{i}")
+            print(f"t:{t}")
+            rss = self.get_received_power(i,27, h_lap, self.distance[i][t], 0)
             RSS_list.append(rss)
-
+            print(f"rss{RSS_list}")
+            self.ideal_RSS[i,t]=rss
         return RSS_list  # 返回所有基站的RSS列表输出一维数组
 
     def calculate_SNR(self, t):
@@ -171,7 +185,7 @@ class ExternalParameterGenerator:
         SNR矩阵 [基站数, 1]，其中基站0的SNR为NaN
         """
         # 噪声基底 (dBm)
-        noise_floor = -114
+        noise_floor = -104
 
         # 对所有基站（排除基站0）计算SNR
         for i in range(self.num_of_eNBs):
@@ -202,7 +216,7 @@ class ExternalParameterGenerator:
         self.RTT[:, t] = rtt
         return self.RTT[:,t]
 
-    def get_t_moment_params(self, t):
+    def get_t_moment_params(self, t,h):
         """
         获取t时刻的SNR、RSS和RTT
 
@@ -212,7 +226,7 @@ class ExternalParameterGenerator:
         返回:
         包含t时刻SNR、RSS和RTT的字典
         """
-        rss = self.get_RSS(t)
+        rss = self.get_RSS(t,h)
         snr = self.calculate_SNR(t)
         rtt = self.rttc(t)
 

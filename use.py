@@ -75,6 +75,8 @@ def inference():
     agent.load(model_path)
 
     N = 200
+    H=30#高度为30m
+    param_generator.calculate_all_rand_walk()
     total_steps = 0
     env_seed = opt.seed
 
@@ -85,7 +87,8 @@ def inference():
     #print(f"state：{env.state}")
     while not done:
         # 生成实时的外部参数
-        external_params = param_generator.get_t_moment_params(inner_loop_count + 1)
+
+        external_params = param_generator.get_t_moment_params(inner_loop_count + 1,H)
         #print(f"Generated external params: {external_params}")
         # 使用模型选择动作
         a = agent.select_action(s, deterministic=True)

@@ -521,7 +521,7 @@ class NetworkSwitchEnv(gym.Env):
         generator.calculate_all_rand_walk()
         self.prev_network=generator.get_nearest_eNB(0)
         # 获取初始状态并赋值给self.state
-        self.update_external_states(generator.get_t_moment_params(0))
+        self.update_external_states(generator.get_t_moment_params(0,self.default_height))
         observation=self.normalize_state(self.state)
         return observation
 
