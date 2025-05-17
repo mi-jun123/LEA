@@ -110,7 +110,7 @@ class NetworkSwitchEnv(gym.Env):
                 raise ValueError("分母不能为零，rj - r0 不能等于 0")
             dist_b = theta / denominator + B0
             log_part = math.log10((255 ** 2) / dist_b)
-
+            #print(f"log_part:{log_part}")
             # 计算最终结果
             UB = eta1 * 10 * log_part * step
         else:
@@ -232,15 +232,15 @@ class NetworkSwitchEnv(gym.Env):
             },
             "Ud": {
                 "min": 0,  # d > d_min时Ud=0
-                "max": 30  # eta2=0.6（d ≤ d_min时）
+                "max": 100  # eta2=0.6（d ≤ d_min时）
             },
             "U_Rs": {
                 "min": 0,  # rss < rssmin时U_Rs=0
-                "max": self.calculate_URSS(eta3=0.7, rss=-70, rssmin=-70)  # rss=rssmin时的最大值
+                "max": self.calculate_URSS(eta3=0.7, rss=-90,)  # rss=rssmin时的最大值
             },
             "Uc": {
-                "min": 0.1,  # 5G成本比最小值（假设c1/c0=0.1）
-                "max": 1.0  # 自组网成本
+                "min": 0,
+                "max": 5  # 自组网成本
             },
             "Us": {
                 "min": self.calculate_v(v=0,k_mode=1),  #
@@ -368,7 +368,8 @@ class NetworkSwitchEnv(gym.Env):
             normalized["Us"],
             normalized["Uh"]
         ]))
-
+        #C=self._min_max_norm(Uc, self.util_boundaries["Uc"]),
+        #print(f"C:{C}")
         return float(G_value)
     def _min_max_norm(self, value, boundaries):
         """
@@ -437,10 +438,10 @@ class NetworkSwitchEnv(gym.Env):
             # 根据索引分配正确的网络类型和编号
             if i == 0:  # 索引0固定为自组网
                 prefix = "adhoc_0"
-                self.state[f"c_{prefix}"]=0.1
+                self.state[f"c_{prefix}"]=0.45
             else:  # 其余索引为5G基站（编号从1开始）
                 prefix = f"5g_{i}"
-                self.state[f"c_{prefix}"] = 0.9
+                self.state[f"c_{prefix}"] = 0.6
 
             # 更新状态空间
             self.state[f"rss_{prefix}"] = rss_i
@@ -458,7 +459,7 @@ class NetworkSwitchEnv(gym.Env):
                 bandwidth = 20e6 # 自组网默认10MHz
                 bitrate = self.calculate_bitrate(snr=snr_i, bandwidth=bandwidth)
                 #print(f"{snr_i}")
-                #print(f"ad{bandwidth}")
+                print(f"ad{bandwidth}")
 
             self.state[f"bitrate_{prefix}"] = bitrate
 
@@ -488,7 +489,7 @@ class NetworkSwitchEnv(gym.Env):
             c=c0
         else:
             c=c1
-
+        #print(f"reward:{reward}")
         observation=self.normalize_state(self.state)
         #print(f"observation:{observation}")
         self.prev_network=action

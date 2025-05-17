@@ -74,7 +74,7 @@ class ExternalParameterGenerator:
         distances = self.distance[:, current_point]
         nearest_eNB_index = np.argmin(distances)
         nearest_distance = distances[nearest_eNB_index]
-        print(f"nearest_eNB_index{nearest_eNB_index}")
+        #print(f"nearest_eNB_index{nearest_eNB_index}")
         return nearest_eNB_index
     def calculate_all_rand_walk(self):
         self.new_walk()

@@ -22,10 +22,10 @@ parser.add_argument('--ModelIdex', type=int, default=100, help='which model to l
 parser.add_argument('--EnvIdex', type=int, default=0, help='Index of the environment')
 
 parser.add_argument('--seed', type=int, default=0, help='random seed')
-parser.add_argument('--Max_train_steps', type=int, default=int(5e5), help='Max training steps')
+parser.add_argument('--Max_train_steps', type=int, default=int(1e6), help='Max training steps')
 parser.add_argument('--save_interval', type=int, default=int(50e3), help='Model saving interval, in steps.')
 parser.add_argument('--eval_interval', type=int, default=int(2e3), help='Model evaluating interval, in steps.')
-parser.add_argument('--random_steps', type=int, default=int(3e3), help='steps for random policy to explore')
+parser.add_argument('--random_steps', type=int, default=int(3e2), help='steps for random policy to explore')
 parser.add_argument('--update_every', type=int, default=50, help='training frequency')
 
 parser.add_argument('--gamma', type=float, default=0.95, help='Discounted Factor')
@@ -163,7 +163,7 @@ def main():
                 pbar.update(1)  # 更新进度条
 
                 if total_steps % opt.save_interval == 0:
-                    agent.save(algo_name, BriefEnvName[opt.EnvIdex], int(total_steps / 1000),3)
+                    agent.save(algo_name, BriefEnvName[opt.EnvIdex], int(total_steps / 1000),4)
 
                 inner_loop_count += 1  # 增加内层循环计数器
                 if should_terminate_inner_loop(inner_loop_count, N):
