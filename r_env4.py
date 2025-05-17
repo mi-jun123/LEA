@@ -450,11 +450,15 @@ class NetworkSwitchEnv(gym.Env):
             if prefix.startswith("5g"):
                 # 5G使用SINR计算比特率
                 bandwidth = 100e6 # 5G默认100MHz
-                bitrate = self.calculate_bitrate(snr=rss_i, bandwidth=bandwidth)
+                bitrate = self.calculate_bitrate(snr=snr_i, bandwidth=bandwidth)
+                #print(f"{snr_i}")
+                #print(f"5g{bandwidth}")
             else:
                 # 自组网使用SNR计算比特率
                 bandwidth = 20e6 # 自组网默认10MHz
                 bitrate = self.calculate_bitrate(snr=snr_i, bandwidth=bandwidth)
+                #print(f"{snr_i}")
+                #print(f"ad{bandwidth}")
 
             self.state[f"bitrate_{prefix}"] = bitrate
 
@@ -462,6 +466,8 @@ class NetworkSwitchEnv(gym.Env):
             # 在更新状态时使用
             self.state[f"v_{prefix}"] = self.default_speed
             self.state[f"h_{prefix}"] = self.default_height
+
+        #print(f"{self.state}")
 
 
     def step(self, action, external_params=None):

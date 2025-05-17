@@ -71,7 +71,7 @@ def inference():
     agent = DQN_agent(**vars(opt))
 
     # 加载训练好的模型
-    model_path = f'models/DuelDDQN_N_step1000_round1_1747403543.pth'
+    model_path = f'models/DuelDDQN_N_step500_round3_1747476230.pth'
     agent.load(model_path)
 
     N = 200
