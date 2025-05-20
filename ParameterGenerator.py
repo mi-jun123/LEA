@@ -47,7 +47,7 @@ class ExternalParameterGenerator:
         self.RTT = np.zeros([self.num_of_eNBs, self.num_of_points_measured])
         self.SNR = np.zeros([self.num_of_eNBs, self.num_of_points_measured])
 
-    def new_walk(self, speed=1.0, time_interval=1.0):
+    def new_walk(self, speed=10.0, time_interval=1.0):
         # 随机游走路径生成（如果需要随机性，可以在这里设置子种子）
         ini_coordinate = np.array([-199.9, 199.9])
         x, y = 0, 0
@@ -56,7 +56,7 @@ class ExternalParameterGenerator:
         direction = 1
         for t in range(num_points):
             self.MS_coordinate[t] = ini_coordinate + np.array([x, y])
-            if t % 30 == 29:  # 每 30 步改变方向
+            if t % 40 == 39:  # 每 30 步改变方向
                 direction *= -1
                 y -= unit  # 换行
             else:
@@ -208,13 +208,16 @@ class ExternalParameterGenerator:
 
             # 存储结果
             self.SNR[i, t] = snr
+            if i==0:
+                self.SNR[i, t]= self.SNR[i, t]-8
+
 
         return self.SNR[:,t]
 
     def rttc(self, t):
         # 使用固定种子确保RTT生成可复现
         np.random.seed(self.seed + t)
-        rtt = np.random.rand(self.num_of_eNBs) * 5 + 20
+        rtt = np.random.rand(self.num_of_eNBs) * 5 + 60
         self.RTT[:, t] = rtt
         return self.RTT[:,t]
 
@@ -231,9 +234,21 @@ class ExternalParameterGenerator:
         rss = self.get_RSS(t,h)
         snr = self.calculate_SNR(t)
         rtt = self.rttc(t)
+        snr_prob = 0.05
+        # 确保RSS是NumPy数组后再进行运算
+        rss = np.array(rss)  # 将列表转换为NumPy数组
+        np.random.seed(self.seed+t+h)
+        #print(f"已设置随机种子: {self.seed}")
+        if np.random.random() < snr_prob:
+            snr[1:] = snr[1:] - 10
+            #print("SNR数组已处理（保持第一位不变，其余减10）")
+            rss[1:] = rss[1:] - 20
+            #print("RSS数组已处理（保持第一位不变，其余减20）")
+
 
         return {
             'SNR': snr,
             'RSS': rss,
             'RTT': rtt
         }
+

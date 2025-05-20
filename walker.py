@@ -30,7 +30,7 @@ class RandomWalker:
             self.MS_coordinate[t] = ini_coordinate + np.array([x, y])
 
             # 每30步改变方向并换行
-            if t % 30 == 29:
+            if t % 40 == 39:
                 direction *= -1
                 y -= unit  # 向下移动一行
             else:

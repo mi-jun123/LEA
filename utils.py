@@ -22,7 +22,7 @@ def evaluate_policy(env,h, agent, param_generator,max_steps_per_episode, turns =
                 s = s_next
         except Exception as e:
             print(f"评估第 {j + 1} 回合时出现异常: {e}")
-    return total_scores/step_count
+    return 10*total_scores/step_count
 
 
 #You can just ignore this funciton. Is not related to the RL.

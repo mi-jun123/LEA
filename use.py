@@ -71,7 +71,7 @@ def inference():
     agent = DQN_agent(**vars(opt))
 
     # 加载训练好的模型
-    model_path = f'models/DuelDDQN_N_step500_round3_1747476230.pth'
+    model_path = f'models/DuelDDQN_N_step1500_round5_1747672119.pth'
     agent.load(model_path)
 
     N = 200
@@ -98,6 +98,7 @@ def inference():
         done = (dw or tr)
         #print(f"s_next: {s_next}")
         #print(f"info: {info}")
+        print(f"r:{r}")
         s = s_next
         total_reward += r
 

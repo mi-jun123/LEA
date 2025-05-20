@@ -259,7 +259,7 @@ class NetworkSwitchEnv(gym.Env):
             "rss": {"min": -120.0, "max": -10.0},  # 信号强度（RSS）
             "bitrate": {"min": 0.0, "max": 1e9},  # 比特率
             "rtt": {"min": 0.0, "max": 200.0},  # 时延（RTT）
-            "cost": {"min": 0.0, "max": 1.0},  # 成本
+            "cost": {"min": 1.0, "max": 9.0},  # 成本
             "speed": {"min": 0.0, "max": 50.0},  # 速度
             "height": {"min": 0.0, "max": 1000.0},  # 高度
         }
@@ -438,7 +438,7 @@ class NetworkSwitchEnv(gym.Env):
             # 根据索引分配正确的网络类型和编号
             if i == 0:  # 索引0固定为自组网
                 prefix = "adhoc_0"
-                self.state[f"c_{prefix}"]=0.45
+                self.state[f"c_{prefix}"]=0.25
             else:  # 其余索引为5G基站（编号从1开始）
                 prefix = f"5g_{i}"
                 self.state[f"c_{prefix}"] = 0.6
@@ -459,7 +459,7 @@ class NetworkSwitchEnv(gym.Env):
                 bandwidth = 20e6 # 自组网默认10MHz
                 bitrate = self.calculate_bitrate(snr=snr_i, bandwidth=bandwidth)
                 #print(f"{snr_i}")
-                print(f"ad{bandwidth}")
+                #print(f"ad{bandwidth}")
 
             self.state[f"bitrate_{prefix}"] = bitrate
 
@@ -478,7 +478,7 @@ class NetworkSwitchEnv(gym.Env):
 
         # 获取初始状态并赋值给self.state
         t_state = external_params
-
+        #print(f"t_state:{t_state}")
         if external_params is not None:
             self.update_external_states(t_state)
 
