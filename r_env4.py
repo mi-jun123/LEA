@@ -209,9 +209,10 @@ class NetworkSwitchEnv(gym.Env):
             k = k2
         else:
             k = k2 * 0.1  #
-
+        #print(f"{k}")
         term1 = k * ((h - h_th) / h_th) *self.heaviside_step(h - h_th)
         term2 = ((h_th - h) / h_th) * self.heaviside_step(h_th - h)
+        #print(f"term2{term2}")
         return term1 + term2
 
     def _init_util_boundaries(self):
@@ -257,9 +258,9 @@ class NetworkSwitchEnv(gym.Env):
         util_boundaries = {
             # 自组网参数边界（与5G基站共用相同边界）
             "rss": {"min": -120.0, "max": -10.0},  # 信号强度（RSS）
-            "bitrate": {"min": 0.0, "max": 1e9},  # 比特率
+            "bitrate": {"min": 0.0, "max": 1e8},  # 比特率
             "rtt": {"min": 0.0, "max": 200.0},  # 时延（RTT）
-            "cost": {"min": 1.0, "max": 9.0},  # 成本
+            "cost": {"min": 0.0, "max": 1.0},  # 成本
             "speed": {"min": 0.0, "max": 50.0},  # 速度
             "height": {"min": 0.0, "max": 1000.0},  # 高度
         }
@@ -438,10 +439,10 @@ class NetworkSwitchEnv(gym.Env):
             # 根据索引分配正确的网络类型和编号
             if i == 0:  # 索引0固定为自组网
                 prefix = "adhoc_0"
-                self.state[f"c_{prefix}"]=0.25
+                self.state[f"c_{prefix}"]=0.1
             else:  # 其余索引为5G基站（编号从1开始）
                 prefix = f"5g_{i}"
-                self.state[f"c_{prefix}"] = 0.6
+                self.state[f"c_{prefix}"] = 0.9
 
             # 更新状态空间
             self.state[f"rss_{prefix}"] = rss_i
@@ -484,6 +485,8 @@ class NetworkSwitchEnv(gym.Env):
 
         # 计算奖励（传入归一化状态）
         reward , rss, rtt, bitrate, v, h, c1, c0= self.calculate_reward(self.state, action,self.prev_network)
+        if self.prev_network==0:
+            reward+=0.1
         #print(f"reward:{reward}")
         if action==0:
             c=c0
@@ -491,6 +494,7 @@ class NetworkSwitchEnv(gym.Env):
             c=c1
         #print(f"reward:{reward}")
         observation=self.normalize_state(self.state)
+
         #print(f"observation:{observation}")
         self.prev_network=action
 

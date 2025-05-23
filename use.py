@@ -10,23 +10,23 @@ from ParameterGenerator import ExternalParameterGenerator
 # 解析命令行参数
 parser = argparse.ArgumentParser()
 parser.add_argument('--dvc', type=str, default='cuda', help='running device: cuda or cpu')
-parser.add_argument('--EnvIdex', type=int, default=0, help='CP-v1, LLd-v2')
 parser.add_argument('--write', type=str2bool, default=True, help='Use SummaryWriter to record the training')
 parser.add_argument('--render', type=str2bool, default=False, help='Render or Not')
 parser.add_argument('--Loadmodel', type=str2bool, default=False, help='Load pretrained model or Not')
 parser.add_argument('--ModelIdex', type=int, default=100, help='which model to load')
+parser.add_argument('--EnvIdex', type=int, default=0, help='Index of the environment')
 
-parser.add_argument('--seed', type=int, default=0, help='random seed')
-parser.add_argument('--Max_train_steps', type=int, default=int(1e6), help='Max training steps')
+parser.add_argument('--seed', type=int, default=42, help='random seed')
+parser.add_argument('--Max_train_steps', type=int, default=int(8e5), help='Max training steps')
 parser.add_argument('--save_interval', type=int, default=int(50e3), help='Model saving interval, in steps.')
 parser.add_argument('--eval_interval', type=int, default=int(2e3), help='Model evaluating interval, in steps.')
-parser.add_argument('--random_steps', type=int, default=int(3e3), help='steps for random policy to explore')
+parser.add_argument('--random_steps', type=int, default=int(3e2), help='steps for random policy to explore')
 parser.add_argument('--update_every', type=int, default=50, help='training frequency')
 
-parser.add_argument('--gamma', type=float, default=0.99, help='Discounted Factor')
+parser.add_argument('--gamma', type=float, default=0.95, help='Discounted Factor')
 parser.add_argument('--net_width', type=int, default=200, help='Hidden net width')
-parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
-parser.add_argument('--batch_size', type=int, default=512, help='lenth of sliced trajectory')
+parser.add_argument('--lr', type=float, default=1e-5, help='Learning rate')
+parser.add_argument('--batch_size', type=int, default=256, help='lenth of sliced trajectory')
 parser.add_argument('--exp_noise', type=float, default=0.2, help='explore noise')
 parser.add_argument('--noise_decay', type=float, default=0.99, help='decay rate of explore noise')
 parser.add_argument('--Double', type=str2bool, default=True, help='Whether to use Double Q-learning')
@@ -71,11 +71,13 @@ def inference():
     agent = DQN_agent(**vars(opt))
 
     # 加载训练好的模型
-    model_path = f'models/DuelDDQN_N_step1500_round5_1747672119.pth'
+    model_path = f'models/DuelDDQN_N_step800_round8_1747911553.pth'
     agent.load(model_path)
 
-    N = 200
+    N = 1000
     H=30#高度为30m
+    action_change_count=0
+    prev_action = param_generator.get_nearest_eNB(0)
     param_generator.calculate_all_rand_walk()
     total_steps = 0
     env_seed = opt.seed
@@ -84,6 +86,7 @@ def inference():
     done = False
     inner_loop_count = 0
     total_reward = 0
+
     #print(f"state：{env.state}")
     while not done:
         # 生成实时的外部参数
@@ -93,6 +96,9 @@ def inference():
         # 使用模型选择动作
         a = agent.select_action(s, deterministic=True)
         print(f"a: {a}")
+        if prev_action is not None and a != prev_action:
+            action_change_count += 1
+        prev_action = a  # 更新上一次的动作
         # 与环境交互
         s_next, r, dw, tr= env.step(a, external_params)
         done = (dw or tr)
@@ -108,9 +114,49 @@ def inference():
         if inner_loop_count >= N:
             done = True
             print(f"内层循环达到 {N} 次，终止当前回合。")
+            print(f"动作变化次数: {action_change_count}")  # 新增：打印总变化次数
 
     print(f"总奖励: {total_reward}")
     env.close()
 
+
+def plot_handover_relationship(handover_data):
+    """绘制切换率与速度、高度的关系图"""
+    # 转换为DataFrame方便绘图
+    import pandas as pd
+    df = pd.DataFrame(handover_data)
+
+    # 设置图片清晰度
+    plt.rcParams['figure.dpi'] = 300
+    plt.rcParams['font.sans-serif'] = ['Source Han Sans SC']  # 支持中文
+
+    # 1. 切换率与速度的关系（固定高度）
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+    # 按高度分组绘制速度与切换率的关系
+    for height, group in df.groupby('height'):
+        sns.lineplot(x='speed', y='handover_rate', data=group,
+                     label=f'高度 = {height}m', ax=axes[0])
+
+    axes[0].set_title('切换率与速度的关系')
+    axes[0].set_xlabel('速度 (m/s)')
+    axes[0].set_ylabel('切换率 (总切换次数/N)')
+    axes[0].legend()
+    axes[0].grid(True, linestyle='--', alpha=0.7)
+
+    # 2. 切换率与高度的关系（固定速度）
+    for speed, group in df.groupby('speed'):
+        sns.lineplot(x='height', y='handover_rate', data=group,
+                     label=f'速度 = {speed}m/s', ax=axes[1])
+
+    axes[1].set_title('切换率与高度的关系')
+    axes[1].set_xlabel('高度 (m)')
+    axes[1].set_ylabel('切换率 (总切换次数/N)')
+    axes[1].legend()
+    axes[1].grid(True, linestyle='--', alpha=0.7)
+
+    plt.tight_layout()
+    plt.savefig('handover_relationship.png')
+    plt.show()
 if __name__ == '__main__':
     inference()

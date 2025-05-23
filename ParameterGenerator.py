@@ -3,7 +3,7 @@ import math
 
 
 class ExternalParameterGenerator:
-    def __init__(self, freq=35e8, max_pathloss=120, seed=42):
+    def __init__(self, freq=35e8, max_pathloss=120, seed=32):
         # 设置随机数种子
         self.seed = seed
         np.random.seed(self.seed)
