@@ -44,6 +44,7 @@ class DQN_agent(object):
 		# Init hyperparameters for agent, just like "self.gamma = opt.gamma, self.lambd = opt.lambd, ..."
 		self.__dict__.update(kwargs)
 		self.tau = 0.005
+
 		self.replay_buffer = ReplayBuffer(self.state_dim, self.dvc, max_size=int(1e6))
 		if self.Duel:
 			self.q_net = Duel_Q_Net(self.state_dim, self.action_dim, (self.net_width,self.net_width)).to(self.dvc)
@@ -88,6 +89,7 @@ class DQN_agent(object):
 		current_q_a = current_q.gather(1,a)
 
 		q_loss = F.mse_loss(current_q_a, target_Q)
+		#lr = lr* (self.κ_inc if error_ratio < self.δ else self.κ_dec)
 		self.q_net_optimizer.zero_grad()
 		q_loss.backward()
 		self.q_net_optimizer.step()

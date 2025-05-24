@@ -240,9 +240,9 @@ class ExternalParameterGenerator:
         np.random.seed(self.seed+t+h)
         #print(f"已设置随机种子: {self.seed}")
         if np.random.random() < snr_prob:
-            snr[1:] = snr[1:] - 10
+            snr[1:] = snr[1:] - 30
             #print("SNR数组已处理（保持第一位不变，其余减10）")
-            rss[1:] = rss[1:] - 20
+            rss[1:] = rss[1:] - 40
             #print("RSS数组已处理（保持第一位不变，其余减20）")
 
 

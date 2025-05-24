@@ -190,7 +190,7 @@ class NetworkSwitchEnv(gym.Env):
         term2 =self.heaviside_step(v_th - v)* ((v_th - v) / v_th)
         return term1 + term2
 
-    def calculate_h(self, h, k_mode,h_th=120, k2=0.1, ):
+    def calculate_h(self, h, k_mode,h_th=120, k2=0.1 ):
         """
         计算门控变量相关的动态方程
 
@@ -485,8 +485,8 @@ class NetworkSwitchEnv(gym.Env):
 
         # 计算奖励（传入归一化状态）
         reward , rss, rtt, bitrate, v, h, c1, c0= self.calculate_reward(self.state, action,self.prev_network)
-        if self.prev_network==0:
-            reward+=0.1
+        #if self.prev_network==0:
+
         #print(f"reward:{reward}")
         if action==0:
             c=c0

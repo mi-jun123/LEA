@@ -24,15 +24,15 @@ parser.add_argument('--EnvIdex', type=int, default=0, help='Index of the environ
 parser.add_argument('--seed', type=int, default=42, help='random seed')
 parser.add_argument('--Max_train_steps', type=int, default=int(8e5), help='Max training steps')
 parser.add_argument('--save_interval', type=int, default=int(50e3), help='Model saving interval, in steps.')
-parser.add_argument('--eval_interval', type=int, default=int(2e3), help='Model evaluating interval, in steps.')
+parser.add_argument('--eval_interval', type=int, default=int(1e3), help='Model evaluating interval, in steps.')
 parser.add_argument('--random_steps', type=int, default=int(3e2), help='steps for random policy to explore')
 parser.add_argument('--update_every', type=int, default=50, help='training frequency')
 
 parser.add_argument('--gamma', type=float, default=0.95, help='Discounted Factor')
 parser.add_argument('--net_width', type=int, default=200, help='Hidden net width')
-parser.add_argument('--lr', type=float, default=1e-5, help='Learning rate')
+parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
 parser.add_argument('--batch_size', type=int, default=256, help='lenth of sliced trajectory')
-parser.add_argument('--exp_noise', type=float, default=0.2, help='explore noise')
+parser.add_argument('--exp_noise', type=float, default=0.4, help='explore noise')
 parser.add_argument('--noise_decay', type=float, default=0.99, help='decay rate of explore noise')
 parser.add_argument('--Double', type=str2bool, default=True, help='Whether to use Double Q-learning')
 parser.add_argument('--Duel', type=str2bool, default=True, help='Whether to use Duel networks')
@@ -101,8 +101,8 @@ def main():
     losses=0.5
     N=1000
     H=30#高度为30m
-    score=4
-
+    score=1
+    episode_count=0
     param_generator.calculate_all_rand_walk()
     with tqdm(total=opt.Max_train_steps, desc="Training Progress", unit="step") as pbar:
         total_steps = 0
@@ -119,7 +119,7 @@ def main():
             env_seed += 1
             done = False
             inner_loop_count = 0  # 初始化内层循环计数器
-
+            episode_count+=1
             while not done:
                 # 生成实时的外部参数
                 external_params = param_generator.get_t_moment_params(inner_loop_count+1,H)
@@ -149,9 +149,9 @@ def main():
                     score = evaluate_policy(eval_env, H,agent, param_generator, turns=1, max_steps_per_episode=N,
                                             seed=env_seed)
                     if opt.write:
-                        writer.add_scalar('ep_r', score, global_step=total_steps)
-                        writer.add_scalar('noise', agent.exp_noise, global_step=total_steps)
-                        writer.add_scalar('loss',losses,global_step=total_steps)
+                        writer.add_scalar('ep_r', score, global_step=episode_count)
+                        writer.add_scalar('noise', agent.exp_noise, global_step=episode_count)
+                        writer.add_scalar('loss',losses,global_step=episode_count)
                     print('EnvName:', BriefEnvName[opt.EnvIdex], 'seed:', opt.seed,
                           'steps: {}k'.format(int(total_steps / 1000)), 'score:', int(score))
 
@@ -165,7 +165,7 @@ def main():
                 pbar.update(1)  # 更新进度条
 
                 if total_steps % opt.save_interval == 0:
-                    agent.save(algo_name, BriefEnvName[opt.EnvIdex], int(total_steps / 1000),9)
+                    agent.save(algo_name, BriefEnvName[opt.EnvIdex], int(total_steps / 1000),10)
 
                 inner_loop_count += 1  # 增加内层循环计数器
                 if should_terminate_inner_loop(inner_loop_count, N):
