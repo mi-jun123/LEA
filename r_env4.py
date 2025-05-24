@@ -241,7 +241,7 @@ class NetworkSwitchEnv(gym.Env):
             },
             "Uc": {
                 "min": 0,
-                "max": 5  # 自组网成本
+                "max": 20  # 自组网成本
             },
             "Us": {
                 "min": self.calculate_v(v=0,k_mode=1),  #
@@ -442,7 +442,7 @@ class NetworkSwitchEnv(gym.Env):
                 self.state[f"c_{prefix}"]=0.1
             else:  # 其余索引为5G基站（编号从1开始）
                 prefix = f"5g_{i}"
-                self.state[f"c_{prefix}"] = 0.9
+                self.state[f"c_{prefix}"] = 1
 
             # 更新状态空间
             self.state[f"rss_{prefix}"] = rss_i

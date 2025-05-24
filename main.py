@@ -22,7 +22,7 @@ parser.add_argument('--ModelIdex', type=int, default=100, help='which model to l
 parser.add_argument('--EnvIdex', type=int, default=0, help='Index of the environment')
 
 parser.add_argument('--seed', type=int, default=42, help='random seed')
-parser.add_argument('--Max_train_steps', type=int, default=int(8e5), help='Max training steps')
+parser.add_argument('--Max_train_steps', type=int, default=int(15e5), help='Max training steps')
 parser.add_argument('--save_interval', type=int, default=int(50e3), help='Model saving interval, in steps.')
 parser.add_argument('--eval_interval', type=int, default=int(1e3), help='Model evaluating interval, in steps.')
 parser.add_argument('--random_steps', type=int, default=int(3e2), help='steps for random policy to explore')
@@ -30,10 +30,10 @@ parser.add_argument('--update_every', type=int, default=50, help='training frequ
 
 parser.add_argument('--gamma', type=float, default=0.95, help='Discounted Factor')
 parser.add_argument('--net_width', type=int, default=200, help='Hidden net width')
-parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
+parser.add_argument('--lr', type=float, default=5e-4, help='Learning rate')
 parser.add_argument('--batch_size', type=int, default=256, help='lenth of sliced trajectory')
-parser.add_argument('--exp_noise', type=float, default=0.4, help='explore noise')
-parser.add_argument('--noise_decay', type=float, default=0.99, help='decay rate of explore noise')
+parser.add_argument('--exp_noise', type=float, default=0.3, help='explore noise')
+parser.add_argument('--noise_decay', type=float, default=0.995, help='decay rate of explore noise')
 parser.add_argument('--Double', type=str2bool, default=True, help='Whether to use Double Q-learning')
 parser.add_argument('--Duel', type=str2bool, default=True, help='Whether to use Duel networks')
 opt = parser.parse_args()
@@ -101,7 +101,7 @@ def main():
     losses=0.5
     N=1000
     H=30#高度为30m
-    score=1
+
     episode_count=0
     param_generator.calculate_all_rand_walk()
     with tqdm(total=opt.Max_train_steps, desc="Training Progress", unit="step") as pbar:
@@ -112,7 +112,8 @@ def main():
             return inner_loop_count >= N
 
         def should_evaluate(total_steps, opt):
-            return total_steps % opt.eval_interval == 0
+            if total_steps>0:
+                return total_steps % opt.eval_interval == 0
 
         while total_steps < opt.Max_train_steps:
             s= env.reset(seed=env_seed)
