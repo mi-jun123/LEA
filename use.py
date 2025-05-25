@@ -71,14 +71,14 @@ def inference():
     agent = DQN_agent(**vars(opt))
 
     # 加载训练好的模型
-    model_path = f'models/DuelDDQN_N_step1500_round10_1748080026.pth'
+    model_path = f'models/DuelDDQN_N_step1500_round11_1748111144.pth'
     agent.load(model_path)
 
     N = 1000
     H=30#高度为30m
     action_change_count=0
     prev_action = param_generator.get_nearest_eNB(0)
-    param_generator.calculate_all_rand_walk()
+    param_generator.calculate_all_rand_walk(ini_coordinate=np.array([-199.9, 199.9]))
     total_steps = 0
     env_seed = opt.seed
 

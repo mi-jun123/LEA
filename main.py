@@ -101,9 +101,13 @@ def main():
     losses=0.5
     N=1000
     H=30#高度为30m
-
+    candidate_points = np.array([
+        [-199.9, 199.9],  # 左上
+        [199.9, 199.9],  # 右上
+        [0, 0],  # 中心
+    ])
     episode_count=0
-    param_generator.calculate_all_rand_walk()
+
     with tqdm(total=opt.Max_train_steps, desc="Training Progress", unit="step") as pbar:
         total_steps = 0
 
@@ -116,7 +120,17 @@ def main():
                 return total_steps % opt.eval_interval == 0
 
         while total_steps < opt.Max_train_steps:
-            s= env.reset(seed=env_seed)
+            # 定义候选坐标点
+
+
+            # 随机选择一个点作为初始坐标
+            index = np.random.randint(0, len(candidate_points))
+            ini_coordinate = candidate_points[index]
+            if episode_count<100:
+                 s= env.reset(seed=env_seed)
+            else:
+                 s = env.reset(ini_coordinate,seed=env_seed)
+            param_generator.calculate_all_rand_walk(ini_coordinate)
             env_seed += 1
             done = False
             inner_loop_count = 0  # 初始化内层循环计数器
@@ -166,7 +180,7 @@ def main():
                 pbar.update(1)  # 更新进度条
 
                 if total_steps % opt.save_interval == 0:
-                    agent.save(algo_name, BriefEnvName[opt.EnvIdex], int(total_steps / 1000),10)
+                    agent.save(algo_name, BriefEnvName[opt.EnvIdex], int(total_steps / 1000),11)
 
                 inner_loop_count += 1  # 增加内层循环计数器
                 if should_terminate_inner_loop(inner_loop_count, N):

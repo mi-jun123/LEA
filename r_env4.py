@@ -241,7 +241,7 @@ class NetworkSwitchEnv(gym.Env):
             },
             "Uc": {
                 "min": 0,
-                "max": 20  # 自组网成本
+                "max": 5  # 自组网成本
             },
             "Us": {
                 "min": self.calculate_v(v=0,k_mode=1),  #
@@ -485,8 +485,9 @@ class NetworkSwitchEnv(gym.Env):
 
         # 计算奖励（传入归一化状态）
         reward , rss, rtt, bitrate, v, h, c1, c0= self.calculate_reward(self.state, action,self.prev_network)
-        #if self.prev_network==0:
-
+        if self.prev_network==action:
+            if reward<0.35:
+                reward-=0.05
         #print(f"reward:{reward}")
         if action==0:
             c=c0
@@ -506,7 +507,7 @@ class NetworkSwitchEnv(gym.Env):
             truncated,
         )
 
-    def reset(self, seed=None, options=None):
+    def reset(self, ini_coordinate=np.array([-199.9, 199.9]),seed=None, options=None):
         # 设置随机种子，保证结果可复现
         if seed is not None:
             np.random.seed(seed)
@@ -519,7 +520,7 @@ class NetworkSwitchEnv(gym.Env):
         )
 
         # 初始化环境
-        generator.calculate_all_rand_walk()
+        generator.calculate_all_rand_walk(ini_coordinate)
         self.prev_network=generator.get_nearest_eNB(0)
         # 获取初始状态并赋值给self.state
         self.update_external_states(generator.get_t_moment_params(0,self.default_height))
