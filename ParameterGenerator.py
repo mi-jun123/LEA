@@ -47,9 +47,8 @@ class ExternalParameterGenerator:
         self.RTT = np.zeros([self.num_of_eNBs, self.num_of_points_measured])
         self.SNR = np.zeros([self.num_of_eNBs, self.num_of_points_measured])
 
-    def new_walk(self, speed=10.0, time_interval=1.0):
+    def new_walk(self,ini_coordinate,speed=10.0, time_interval=1.0,):
         # 随机游走路径生成（如果需要随机性，可以在这里设置子种子）
-        ini_coordinate = np.array([-199.9, 199.9])
         x, y = 0, 0
         unit = speed * time_interval  # 每步移动距离 = 速度 × 时间间隔
         num_points = self.num_of_points_measured
@@ -76,8 +75,8 @@ class ExternalParameterGenerator:
         nearest_distance = distances[nearest_eNB_index]
         #print(f"nearest_eNB_index{nearest_eNB_index}")
         return nearest_eNB_index
-    def calculate_all_rand_walk(self):
-        self.new_walk()
+    def calculate_all_rand_walk(self,ini_coordinate,speed):
+        self.new_walk(ini_coordinate,speed)
         self.calculate_distance()
     def calculate_sigmoid_params(self):
         """根据ITU参数拟合Sigmoid曲线参数a和b"""
@@ -234,7 +233,7 @@ class ExternalParameterGenerator:
         rss = self.get_RSS(t,h)
         snr = self.calculate_SNR(t)
         rtt = self.rttc(t)
-        snr_prob = 0.05
+        snr_prob = 0.0
         # 确保RSS是NumPy数组后再进行运算
         rss = np.array(rss)  # 将列表转换为NumPy数组
         np.random.seed(self.seed+t+h)

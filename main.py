@@ -22,9 +22,9 @@ parser.add_argument('--ModelIdex', type=int, default=100, help='which model to l
 parser.add_argument('--EnvIdex', type=int, default=0, help='Index of the environment')
 
 parser.add_argument('--seed', type=int, default=42, help='random seed')
-parser.add_argument('--Max_train_steps', type=int, default=int(15e5), help='Max training steps')
+parser.add_argument('--Max_train_steps', type=int, default=int(3e6), help='Max training steps')
 parser.add_argument('--save_interval', type=int, default=int(50e3), help='Model saving interval, in steps.')
-parser.add_argument('--eval_interval', type=int, default=int(1e3), help='Model evaluating interval, in steps.')
+parser.add_argument('--eval_interval', type=int, default=int(4e3), help='Model evaluating interval, in steps.')
 parser.add_argument('--random_steps', type=int, default=int(3e2), help='steps for random policy to explore')
 parser.add_argument('--update_every', type=int, default=50, help='training frequency')
 

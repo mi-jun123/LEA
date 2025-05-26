@@ -442,8 +442,7 @@ class NetworkSwitchEnv(gym.Env):
                 self.state[f"c_{prefix}"]=0.1
             else:  # 其余索引为5G基站（编号从1开始）
                 prefix = f"5g_{i}"
-                self.state[f"c_{prefix}"] = 1
-
+                self.state[f"c_{prefix}"] = 1.1
             # 更新状态空间
             self.state[f"rss_{prefix}"] = rss_i
             self.state[f"rtt_{prefix}"] = rtt_i
@@ -520,7 +519,7 @@ class NetworkSwitchEnv(gym.Env):
         )
 
         # 初始化环境
-        generator.calculate_all_rand_walk(ini_coordinate)
+        generator.calculate_all_rand_walk(ini_coordinate,self.default_speed)
         self.prev_network=generator.get_nearest_eNB(0)
         # 获取初始状态并赋值给self.state
         self.update_external_states(generator.get_t_moment_params(0,self.default_height))

@@ -71,14 +71,14 @@ def inference():
     agent = DQN_agent(**vars(opt))
 
     # 加载训练好的模型
-    model_path = f'models/DuelDDQN_N_step1500_round11_1748111144.pth'
+    model_path = f'models/DuelDDQN_N_step3000_round11_1748198727.pth'
     agent.load(model_path)
-
-    N = 1000
+    default_speed=10
+    N =1000
     H=30#高度为30m
     action_change_count=0
     prev_action = param_generator.get_nearest_eNB(0)
-    param_generator.calculate_all_rand_walk(ini_coordinate=np.array([-199.9, 199.9]))
+    param_generator.calculate_all_rand_walk(ini_coordinate=np.array([-199.9, 199.9]),speed=default_speed)
     total_steps = 0
     env_seed = opt.seed
 
@@ -96,7 +96,7 @@ def inference():
         # 使用模型选择动作
         a = agent.select_action(s, deterministic=True)
         print(f"a: {a}")
-        if prev_action is not None and a != prev_action:
+        if prev_action is not None and (a != prev_action and a == 0):
             action_change_count += 1
         prev_action = a  # 更新上一次的动作
         # 与环境交互
